@@ -118,6 +118,7 @@
 -export([extend_properties/2,
          should_be_permitted/2,
          enable_underlying_feature_flag_cb/1]).
+-export([list/1]).
 
 -type deprecated_feature_modattr() :: {rabbit_feature_flags:feature_name(),
                                        feature_props()}.
@@ -345,6 +346,25 @@ get_warning(FeatureProps, Permitted) when is_map(FeatureProps) ->
         true ->
             maps:get(when_removed, Msgs)
     end.
+
+-spec list(Which :: all | used) -> rabbit_feature_flags:feature_flags().
+%% @doc
+%% Lists all or used deprecated features, depending on the argument.
+%%
+%% @param Which The group of deprecated features to return: `all' or `used'.
+%% @returns A map of selected deprecated features.
+
+list(all) ->
+    maps:filter(
+      fun(_, FeatureProps) -> ?IS_DEPRECATION(FeatureProps) end,
+      rabbit_ff_registry_wrapper:list(all));
+list(used) ->
+    maps:filter(
+      fun(_, FeatureProps) -> ?IS_DEPRECATION(FeatureProps)
+                                  and
+                                  is_deprecated_feature_in_use(FeatureProps)
+      end,
+      rabbit_ff_registry_wrapper:list(all)).
 
 %% -------------------------------------------------------------------
 %% Internal functions.
@@ -602,3 +622,8 @@ enable_underlying_feature_flag_cb(
         _ ->
             ok
     end.
+
+is_deprecated_feature_in_use(#{callbacks := #{is_feature_used := {CallbackMod, CallbackFun}}}) ->
+    erlang:apply(CallbackMod, CallbackFun, [#{}]);
+is_deprecated_feature_in_use(_) ->
+    false.
