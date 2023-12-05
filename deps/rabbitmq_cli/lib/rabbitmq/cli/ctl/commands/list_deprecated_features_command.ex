@@ -2,7 +2,8 @@
 ## License, v. 2.0. If a copy of the MPL was not distributed with this
 ## file, You can obtain one at https://mozilla.org/MPL/2.0/.
 ##
-## Copyright (c) 2018-2023 VMware, Inc. or its affiliates.  All rights reserved.
+## Copyright (c) 2023 Broadcom. All Rights Reserved. The term “Broadcom”
+## refers to Broadcom Inc. and/or its subsidiaries.  All rights reserved.
 
 defmodule RabbitMQ.CLI.Ctl.Commands.ListDeprecatedFeaturesCommand do
   alias RabbitMQ.CLI.Core.{DocGuide, Validators}
@@ -49,7 +50,7 @@ defmodule RabbitMQ.CLI.Ctl.Commands.ListDeprecatedFeaturesCommand do
   def run([_ | _] = args, %{node: node_name, timeout: timeout, used: false}) do
     case :rabbit_misc.rpc_call(
            node_name,
-           :rabbit_deprecated_feature_extra,
+           :rabbit_depr_ff_extra,
            :cli_info,
            [:all],
            timeout

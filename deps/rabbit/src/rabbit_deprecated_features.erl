@@ -117,8 +117,8 @@
          get_warning/1]).
 -export([extend_properties/2,
          should_be_permitted/2,
-         enable_underlying_feature_flag_cb/1]).
--export([list/1]).
+         enable_underlying_feature_flag_cb/1,
+         list/1]).
 
 -type deprecated_feature_modattr() :: {rabbit_feature_flags:feature_name(),
                                        feature_props()}.
@@ -202,6 +202,10 @@
 %% We make sure messages are set, possibly generating them automatically if
 %% needed. Other added properties are the same as {@link
 %% rabbit_feature_flags:feature_props_extended()}.
+
+-type deprecated_features() ::
+        #{rabbit_feature_flags:feature_name() =>
+              feature_props_extended()}.
 
 -type callbacks() :: is_feature_used_callback().
 %% All possible callbacks.
@@ -347,7 +351,7 @@ get_warning(FeatureProps, Permitted) when is_map(FeatureProps) ->
             maps:get(when_removed, Msgs)
     end.
 
--spec list(Which :: all | used) -> rabbit_feature_flags:feature_flags().
+-spec list(Which :: all | used) -> deprecated_features().
 %% @doc
 %% Lists all or used deprecated features, depending on the argument.
 %%
@@ -360,9 +364,12 @@ list(all) ->
       rabbit_ff_registry_wrapper:list(all));
 list(used) ->
     maps:filter(
-      fun(_, FeatureProps) -> ?IS_DEPRECATION(FeatureProps)
-                                  and
-                                  is_deprecated_feature_in_use(FeatureProps)
+      fun(FeatureName, FeatureProps) ->
+              ?IS_DEPRECATION(FeatureProps)
+                  and
+                  is_deprecated_feature_in_use(
+                    #{feature_name => FeatureName,
+                      feature_props => FeatureProps})
       end,
       rabbit_ff_registry_wrapper:list(all)).
 
@@ -601,29 +608,27 @@ should_log_warning(FeatureName) ->
 
 enable_underlying_feature_flag_cb(
   #{command := enable,
-    feature_name := FeatureName,
-    feature_props := #{callbacks := Callbacks}} = Args) ->
-    case Callbacks of
-        #{is_feature_used := {CallbackMod, CallbackFun}} ->
-            Args1 = Args#{command => is_feature_used},
-            IsUsed = erlang:apply(CallbackMod, CallbackFun, [Args1]),
-            case IsUsed of
-                false ->
-                    ok;
-                true ->
-                    ?LOG_ERROR(
-                       "Deprecated features: `~ts`: can't deny deprecated "
-                       "feature because it is actively used",
-                       [FeatureName],
-                       #{domain => ?RMQLOG_DOMAIN_FEAT_FLAGS}),
-                    {error,
-                     {failed_to_deny_deprecated_features, [FeatureName]}}
-            end;
-        _ ->
-            ok
+    feature_name := FeatureName} = Args) ->
+    IsUsed = is_deprecated_feature_in_use(Args),
+    case IsUsed of
+        false ->
+            ok;
+        true ->
+            ?LOG_ERROR(
+               "Deprecated features: `~ts`: can't deny deprecated "
+               "feature because it is actively used",
+               [FeatureName],
+               #{domain => ?RMQLOG_DOMAIN_FEAT_FLAGS}),
+            {error,
+             {failed_to_deny_deprecated_features, [FeatureName]}}
     end.
 
-is_deprecated_feature_in_use(#{callbacks := #{is_feature_used := {CallbackMod, CallbackFun}}}) ->
-    erlang:apply(CallbackMod, CallbackFun, [#{}]);
-is_deprecated_feature_in_use(_) ->
-    false.
+is_deprecated_feature_in_use(
+  #{feature_props := #{callbacks := Callbacks}} = Args1) ->
+    case Callbacks of
+        #{is_feature_used := {CallbackMod, CallbackFun}} ->
+            Args = Args1#{command => is_feature_used},
+            erlang:apply(CallbackMod, CallbackFun, [Args]);
+        _ ->
+            false
+    end.
