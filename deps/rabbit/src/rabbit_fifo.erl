@@ -1266,12 +1266,12 @@ query_consumers(#?MODULE{consumers = Consumers,
     FromConsumers =
         maps:fold(fun (_, #consumer{status = cancelled}, Acc) ->
                           Acc;
-                      ({Tag, Pid},
+                      (Key = {Tag, Pid},
                        #consumer{cfg = #consumer_cfg{meta = Meta}} = Consumer,
                        Acc) ->
                           {Active, ActivityStatus} =
-                              ActiveActivityStatusFun({Tag, Pid}, Consumer),
-                          maps:put({Tag, Pid},
+                          ActiveActivityStatusFun(Key, Consumer),
+                          maps:put(Key,
                                    {Pid, Tag,
                                     maps:get(ack, Meta, undefined),
                                     maps:get(prefetch, Meta, undefined),
@@ -1284,12 +1284,12 @@ query_consumers(#?MODULE{consumers = Consumers,
     FromWaitingConsumers =
         lists:foldl(fun ({_, #consumer{status = cancelled}}, Acc) ->
                                       Acc;
-                        ({{Tag, Pid},
+                        (Key = {{Tag, Pid},
                           #consumer{cfg = #consumer_cfg{meta = Meta}} = Consumer},
                          Acc) ->
                             {Active, ActivityStatus} =
-                                ActiveActivityStatusFun({Tag, Pid}, Consumer),
-                            maps:put({Tag, Pid},
+                                ActiveActivityStatusFun(Key, Consumer),
+                            maps:put(Key,
                                      {Pid, Tag,
                                       maps:get(ack, Meta, undefined),
                                       maps:get(prefetch, Meta, undefined),
@@ -2295,8 +2295,6 @@ merge_consumer(Meta, #consumer{cfg = CCfg, checked_out = Checked} = Consumer,
     NumChecked = map_size(Checked),
     NewCredit = max(0, Credit - NumChecked),
     Mode = credit_mode(Meta, Credit, Mode0),
-    %% TODO Forbid changing credit API version when detaching and attaching
-    %% with same link handle in the same AMQP 1.0 session.
     Consumer#consumer{cfg = CCfg#consumer_cfg{priority = Priority,
                                               meta = ConsumerMeta,
                                               credit_mode = Mode,
