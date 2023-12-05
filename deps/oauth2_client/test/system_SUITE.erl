@@ -270,7 +270,7 @@ configure_minimum_oauth_provider_settings(Config) ->
 			_ ->  [ {peer_verification, proplists:get_value(verify, OAuthProvider#oauth_provider.ssl_options) },
 							{cacertfile, proplists:get_value(cacertfile, OAuthProvider#oauth_provider.ssl_options) } ]
 	 end,
-	application:set_env(rabbitmq_auth_backend_oauth2, key_config, KeyConfig). 
+	application:set_env(rabbitmq_auth_backend_oauth2, key_config, KeyConfig).
 
 init_per_testcase(TestCase, Config) ->
 	application:set_env(rabbitmq_auth_backend_oauth2, use_global_locks, false),
@@ -459,7 +459,7 @@ build_https_oauth_provider(CaCertFile) ->
 oauth_provider_to_proplist(#oauth_provider{ issuer = Issuer, token_endpoint = TokenEndpoint,
 	ssl_options = SslOptions, jwks_uri = Jwks_url}) ->
 	[ { issuer, Issuer}, {token_endpoint, TokenEndpoint},
-		{ ssl_options, SslOptions}, {jwks_url, Jwks_url} ].
+		{ https, SslOptions}, {jwks_url, Jwks_url} ].
 
 start_http_oauth_server(Port, Expectations) when is_list(Expectations) ->
 	Dispatch = cowboy_router:compile([

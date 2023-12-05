@@ -598,6 +598,14 @@ def test_suite_beam_files(name = "test_suite_beam_files"):
         erlc_opts = "//:test_erlc_opts",
     )
     erlang_bytecode(
+        name = "rabbit_mgmt_wm_auth_SUITE_beam_files",
+        testonly = True,
+        srcs = ["test/rabbit_mgmt_wm_auth_SUITE.erl"],
+        outs = ["test/rabbit_mgmt_wm_auth_SUITE.beam"],
+        app_name = "rabbitmq_management",
+        erlc_opts = "//:test_erlc_opts",
+    )
+    erlang_bytecode(
         name = "stats_SUITE_beam_files",
         testonly = True,
         srcs = ["test/stats_SUITE.erl"],

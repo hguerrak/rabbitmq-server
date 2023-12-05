@@ -386,7 +386,7 @@ map_to_oauth_provider(PropList) when is_list(PropList) ->
     token_endpoint=proplists:get_value(token_endpoint, PropList),
     authorization_endpoint=proplists:get_value(authorization_endpoint, PropList, undefined),
     jwks_uri=proplists:get_value(jwks_uri, PropList, undefined),
-    ssl_options=map_ssl_options(proplists:get_value(ssl_options, PropList, undefined))
+    ssl_options=map_ssl_options(proplists:get_value(https, PropList, undefined))
     }.
 
 map_ssl_options(undefined) ->
