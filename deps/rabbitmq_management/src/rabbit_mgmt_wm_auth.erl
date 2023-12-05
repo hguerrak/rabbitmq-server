@@ -61,7 +61,7 @@ resolve_oauth_provider_url(ResourceServerId, ResourceServers, DefaultValue) ->
     ResourceServer ->
       case proplists:get_value(oauth_provider_url, ResourceServer) of
         undefined ->
-          case maps:get(application:get_env(rabbitmq_management, oauth_provider_url)) of
+          case application:get_env(rabbitmq_management, oauth_provider_url) of
             undefined ->
               case proplists:get_value(oauth_provider_id, ResourceServer) of
                   undefined ->
@@ -198,7 +198,7 @@ is_authorized(ReqData, Context) ->
 is_invalid(List) ->
     lists:any(fun(V) -> case V of
       "" -> true;
-      undefined -> true;      
+      undefined -> true;
       _ -> false
     end end, List).
 
