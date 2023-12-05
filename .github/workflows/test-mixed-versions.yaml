@@ -31,7 +31,7 @@ jobs:
       otp_version_id: 24
     steps:
     - name: CHECKOUT REPOSITORY
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: primary-umbrella
     #! - name: Setup tmate session
@@ -59,7 +59,7 @@ jobs:
         echo "version=${VERSION}" | tee $GITHUB_OUTPUT
     - name: CHECKOUT REPOSITORY (MIXED VERSION)
       if: env.exists != 'true'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: v${{ steps.check.outputs.version }}
         path: secondary-umbrella
@@ -128,7 +128,7 @@ jobs:
     timeout-minutes: 120
     steps:
     - name: CHECKOUT REPOSITORY
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: MOUNT BAZEL CACHE
       uses: actions/cache@v3.3.2
       with:
